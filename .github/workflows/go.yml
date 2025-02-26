@@ -2,10 +2,13 @@ name: Go Example
 on:
   push:
     branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 permissions:
   contents: write
   deployments: write
+  pull-requests: write
 
 jobs:
   benchmark:
@@ -39,3 +42,5 @@ jobs:
           output-file-path: output.txt
           external-data-json-path: ./cache/benchmark-data.json
           fail-on-alert: true
+          comment-always: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
