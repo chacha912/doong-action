@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   deployments: write
+  pull-requests: write
 
 jobs:
   benchmark:
@@ -42,3 +43,4 @@ jobs:
           external-data-json-path: ./cache/benchmark-data.json
           fail-on-alert: true
           comment-always: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
