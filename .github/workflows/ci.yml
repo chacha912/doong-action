@@ -28,7 +28,7 @@ jobs:
 
       - name: Check cache status after restore
         run: |
-          echo "🟡Cache restored: ${{ steps.cache-restore.outputs.cache-hit == 'true' && 'Yes' || 'No' }}"
+          echo "Cache restored: ${{ steps.cache-restore.outputs.cache-hit == 'true' && 'Yes' || 'No' }}"
           mkdir -p ./cache
           if [ -f "./cache/commit_hash.txt" ]; then
             echo "Previous commit in cache: $(cat ./cache/commit_hash.txt)"
@@ -39,14 +39,15 @@ jobs:
 
       - name: Update cache content
         run: |
-          echo "🟢Updating cache with current commit: ${{ github.sha }}"
+          echo "Updating cache with current commit: ${{ github.sha }}"
+          echo "Updating cache with current timestamp: $(date)"
           echo "${{ github.sha }}" > ./cache/commit_hash.txt
           echo "$(date)" > ./cache/last_update.txt
           ls -la ./cache
 
       - name: Post-cache update status
         run: |
-          echo "🟣Files in cache directory after update:"
+          echo "Files in cache directory after update:"
           ls -la ./cache
           echo "Current commit in cache file: $(cat ./cache/commit_hash.txt)"
           echo "Last update timestamp: $(cat ./cache/last_update.txt)"
