@@ -1,0 +1,41 @@
+name: Go Example
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  benchmark:
+    name: Run Go benchmark example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+      - name: Run benchmark
+        run: go test -bench 'BenchmarkFib' | tee output.txt
+      - name: Download previous benchmark data
+        uses: actions/cache@v3
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-benchmark
+      - name: Check cache status after restore
+        run: |
+          if [ -f "./cache/benchmark-data.json" ]; then
+            echo "✅Previous benchmark-data: $(cat ./cache/benchmark-data.json)"
+          else
+            echo "❌No data found in cache"
+          fi
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Go Benchmark
+          tool: "go"
+          output-file-path: output.txt
+          external-data-json-path: ./cache/benchmark-data.json
+          fail-on-alert: true

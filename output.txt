@@ -1,0 +1,9 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/github-action-benchmark/github-action-benchmark/examples/go
+cpu: Apple M1 Pro
+BenchmarkFib10-10                 	 4632325	       250.1 ns/op
+BenchmarkFib20-10                 	   39054	     30840 ns/op
+BenchmarkFib20WithAuxMetric-10    	   38864	     30801 ns/op	         4.000 auxMetricUnits
+PASS
+ok  	github.com/github-action-benchmark/github-action-benchmark/examples/go	4.805s
