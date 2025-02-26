@@ -2,6 +2,8 @@ name: Go Example
 on:
   push:
     branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 permissions:
   contents: write
@@ -39,3 +41,4 @@ jobs:
           output-file-path: output.txt
           external-data-json-path: ./cache/benchmark-data.json
           fail-on-alert: true
+          comment-always: true
