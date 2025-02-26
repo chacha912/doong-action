@@ -41,8 +41,12 @@ jobs:
         run: |
           echo "Updating cache with current commit: ${{ github.sha }}"
           echo "Updating cache with current timestamp: $(date)"
-          echo "${{ github.sha }}" > ./cache/commit_hash.txt
-          echo "$(date)" > ./cache/last_update.txt
+          node -e "
+            const fs = require('fs');
+            fs.writeFileSync('./cache/commit_hash.txt', '${{ github.sha }}', 'utf8');
+            fs.writeFileSync('./cache/last_update.txt', new Date().toString(), 'utf8');
+            console.log('Files written successfully using fs.writeFileSync');
+          "
           ls -la ./cache
 
       - name: Post-cache update status
