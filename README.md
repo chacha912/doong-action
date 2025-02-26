@@ -1,3 +1,3 @@
 # doong-action
 
-test cache 5
+test cache 6
