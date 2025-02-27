@@ -22,43 +22,12 @@ jobs:
       - name: Run benchmark
         run: go test -bench 'BenchmarkFib' | tee output.txt
 
-      # Use artifact
-      - name: Download previous benchmark data
-        uses: actions/download-artifact@v4
-        with:
-          name: benchmark-artifact
-          run-id: 13559452164
-        continue-on-error: true
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Check cache status after restore
-        run: |
-          if [ -f "./benchmark-result.txt" ]; then
-            echo "✅Previous benchmark-data: $(cat ./benchmark-result.txt)"
-          else
-            echo "❌No data found in cache"
-          fi
-
       - name: Compare benchmark data
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Go Benchmark
           tool: "go"
           output-file-path: output.txt
-          external-data-json-path: ./benchmark-data.json
           fail-on-alert: true
           comment-always: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Copy current benchmark result
-        run: cp output.txt benchmark-result.txt
-
-      - name: Upload benchmark result
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-artifact
-          path: |
-            ./benchmark-result.txt
-            ./benchmark-data.json
