@@ -2,8 +2,8 @@ goos: linux
 goarch: amd64
 pkg: github.com/github-action-benchmark/github-action-benchmark/examples/go
 cpu: AMD EPYC 7763 64-Core Processor                
-BenchmarkFib10-4                	 3880146	       312.0 ns/op
-BenchmarkFib20-4                	   30212	     39755 ns/op
-BenchmarkFib20WithAuxMetric-4   	   30379	     39759 ns/op	         4.000 auxMetricUnits
+BenchmarkFib10-4                	 3846024	       312.8 ns/op
+BenchmarkFib20-4                	   30164	     39822 ns/op
+BenchmarkFib20WithAuxMetric-4   	   30166	     39778 ns/op	         4.000 auxMetricUnits
 PASS
-ok  	github.com/github-action-benchmark/github-action-benchmark/examples/go	4.737s
+ok  	github.com/github-action-benchmark/github-action-benchmark/examples/go	4.728s
