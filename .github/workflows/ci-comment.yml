@@ -43,7 +43,7 @@ jobs:
           comment_id_file="./cache/comment_id.txt"
           prev_comment_id=""
           if [ -f "$comment_id_file" ]; then
-            prev_comment_id=$(cat "$comment_id_file" | jq -r '.comment-id')
+            prev_comment_id=$(cat "$comment_id_file" | jq -r '.comment_id')
           fi
 
           response=$(curl -f -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
