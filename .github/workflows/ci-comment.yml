@@ -1,0 +1,73 @@
+name: Cache
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Print current pr information
+        run: |
+          echo "Current pr: ${{ github.event.pull_request.number }}"
+
+      - name: Restore cache
+        id: cache-restore
+        uses: actions/cache@v3
+        with:
+          path: ./cache
+          key: comment-id-${{ github.event.pull_request.number }}
+          restore-keys: |
+            comment-id-${{ github.event.pull_request.number }}
+
+      - name: Check cache status after restore
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+        run: |
+          echo "Cache restored: ${{ steps.cache-restore.outputs.cache-hit == 'true' && 'Yes' || 'No' }}"
+          mkdir -p ./cache
+          if [ -f "./cache/comment_id.txt" ]; then
+            echo "Previous comment in cache: $(cat ./cache/comment_id.txt)"
+          else
+            echo "No previous comment found in cache"
+          fi
+
+      - name: Trigger n8n webhook
+        if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+        id: webhook
+        run: |
+          # 이전에 저장된 comment_id가 있는지 확인
+          comment_id_file="./cache/comment_id.txt"
+          prev_comment_id=""
+          if [ -f "$comment_id_file" ]; then
+            prev_comment_id=$(cat "$comment_id_file" | jq -r '.comment-id')
+          fi
+
+          response=$(curl -f -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"repo\": \"${{ github.repository }}\",
+            \"pr_number\": \"${{ github.event.pull_request.number }}\",
+            \"commit_id\": \"${{ github.sha }}\",
+            \"prev_comment_id\": \"${prev_comment_id}\"
+          }" || echo "CURL_ERROR")
+
+          if [ "$response" = "CURL_ERROR" ]; then
+            echo "::error::Failed to trigger n8n webhook"
+            exit 1
+          fi
+
+          # 응답 저장
+          echo "🚀Response: $response"
+          echo "$response" > "$comment_id_file"
+          echo "Saved response:"
+          cat "$comment_id_file"
+
+      - name: Post-cache update status
+        run: |
+          echo "Files in cache directory after update:"
+          ls -la ./cache
+          echo "Current commit in cache file: $(cat ./cache/comment_id.txt)"
