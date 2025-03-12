@@ -2,8 +2,7 @@ goos: darwin
 goarch: arm64
 pkg: github.com/github-action-benchmark/github-action-benchmark/examples/go
 cpu: Apple M1 Pro
-BenchmarkFib10-10                 	 4632325	       250.1 ns/op
-BenchmarkFib20-10                 	   39054	     30840 ns/op
-BenchmarkFib20WithAuxMetric-10    	   38864	     30801 ns/op	         4.000 auxMetricUnits
+BenchmarkVersionVector/clients_10-4         	       7	 158295947 ns/op	       745.0 1_changepack(bytes)	       379.0 2_snapshot(bytes)	         7.000 3_pushpull(ms)	         7.000 4_attach(ms)	       805.0 5_changepack_after_detach(bytes)	       136.0 6_snapshot_after_detach(bytes)	         8.000 7_pushpull_after_detach(ms)	20056022 B/op	   85598 allocs/op
+BenchmarkVersionVector/clients_100-4        	       1	1344142490 ns/op	      6145 1_changepack(bytes)	      3079 2_snapshot(bytes)	        11.00 3_pushpull(ms)	         6.000 4_attach(ms)	      6206 5_changepack_after_detach(bytes)	       136.0 6_snapshot_after_detach(bytes)	        10.00 7_pushpull_after_detach(ms)	219123712 B/op	 1382187 allocs/op
+BenchmarkVersionVector/clients_1000-4       	       1	35727212280 ns/op	     60150 1_changepack(bytes)	     30079 2_snapshot(bytes)	       116.0 3_pushpull(ms)	        10.00 4_attach(ms)	     60210 5_changepack_after_detach(bytes)	       136.0 6_snapshot_after_detach(bytes)	        21.00 7_pushpull_after_detach(ms)	6297948528 B/op	80670906 allocs/op
 PASS
-ok  	github.com/github-action-benchmark/github-action-benchmark/examples/go	4.805s
