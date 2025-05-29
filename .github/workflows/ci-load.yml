@@ -29,11 +29,13 @@ jobs:
         id: prev-load
         run: |
           echo "PREV_LOAD_RESULT=null" >> $GITHUB_OUTPUT
+          echo "PREV_LOAD_SUMMARY=null" >> $GITHUB_OUTPUT
           echo "PREV_COMMIT=null" >> $GITHUB_OUTPUT
 
           if [ -d "load-repo" ] && [ -f "load-repo/load_summary.json" ]; then
-            content=$(cat load-repo/load_summary.json | jq -R -s .)
+            content=$(cat load-repo/output.text | jq -R -s .)
             echo "PREV_LOAD_RESULT=$content" >> $GITHUB_OUTPUT
+            echo "PREV_LOAD_SUMMARY=$(jq -c . summary.json)" >> $GITHUB_OUTPUT
             if [ -f "load-repo/commit_hash.txt" ]; then
               prev_commit=$(cat load-repo/commit_hash.txt)
               echo "PREV_COMMIT=$prev_commit" >> $GITHUB_OUTPUT
@@ -41,15 +43,33 @@ jobs:
           fi
 
       - uses: grafana/setup-k6-action@v1
-      #   - name: Run local k6 test
-      #     uses: grafana/run-k6-action@v1
-      #     with:
-      #       path: ./repo/k6_test.js
-      #       flags: --summary-export=summary.json
-      - name: Run k6 test and save results
+      - name: Run load test
+        id: curr-load
         run: |
           cd repo
           k6 run k6_test.js --summary-export=summary.json | tee output.txt
+          echo "LOAD_RESULT=$(cat output.txt | jq -R -s .)" >> $GITHUB_OUTPUT
+          echo "LOAD_SUMMARY=$(jq -c . summary.json)" >> $GITHUB_OUTPUT
+
+      - name: Trigger n8n webhook
+        run: |
+          response=$(curl -f -X POST ${{ secrets.N8N_WEBHOOK_URL2 }} \
+          -H "Content-Type: application/json" \
+          -d '{
+              "repo": "${{ github.repository }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+              "commit_id": "${{ github.sha }}",
+              "prev_commit_id": "${{ steps.prev-load.outputs.PREV_COMMIT }}",
+              "load_result": "${{ steps.curr-load.outputs.LOAD_RESULT }}",
+              "load_summary": "${{ steps.curr-load.outputs.LOAD_SUMMARY }}",
+              "prev_load_result": "${{ steps.prev-load.outputs.PREV_LOAD_RESULT }}",
+              "prev_load_summary": "${{ steps.prev-load.outputs.PREV_LOAD_SUMMARY }}"
+          }' || echo "CURL_ERROR")
+
+          if [ "$response" = "CURL_ERROR" ]; then
+              echo "::error::Failed to trigger n8n webhook"
+              exit 1
+          fi
 
       - name: Store load result
         run: |
