@@ -9,9 +9,60 @@ jobs:
     name: load-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: grafana/setup-k6-action@v1
-      - uses: grafana/run-k6-action@v1
+      - name: Checkout current repository
+        uses: actions/checkout@v4
         with:
-          path: |
-            ./k6_test.js
+          path: repo
+
+      - name: Checkout load branch
+        uses: actions/checkout@v4
+        with:
+          ref: yorkie-ci-load
+          path: load-repo
+        continue-on-error: true
+
+      - name: Read previous load result
+        id: prev-load
+        run: |
+          echo "PREV_LOAD_RESULT=null" >> $GITHUB_OUTPUT
+          echo "PREV_COMMIT=null" >> $GITHUB_OUTPUT
+
+          if [ -d "load-repo" ] && [ -f "load-repo/load_summary.json" ]; then
+            content=$(cat load-repo/load_summary.json | jq -R -s .)
+            echo "PREV_LOAD_RESULT=$content" >> $GITHUB_OUTPUT
+            if [ -f "load-repo/commit_hash.txt" ]; then
+              prev_commit=$(cat load-repo/commit_hash.txt)
+              echo "PREV_COMMIT=$prev_commit" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - uses: grafana/setup-k6-action@v1
+      - name: Run k6 test and save results
+        run: |
+          cd repo
+          k6 run k6_test.js --summary-export=summary.json | tee output.txt
+
+      - name: Store load result
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p load-repo
+          cp repo/summary.json load-repo/load_summary.json
+          echo "${{ github.sha }}" > load-repo/commit_hash.txt
+
+          cd load-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if [ ! -d ".git" ]; then
+            git init
+            git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          fi
+
+          git add load_summary.json
+          git add commit_hash.txt
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          git diff --staged --quiet || git commit -m "Update load results at $TIMESTAMP"
+          git checkout -B yorkie-ci-load
+          git push -f origin yorkie-ci-load
+
+          echo "load results have been pushed to yorkie-ci-load branch"
