@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   load-test:
     name: load-test
@@ -37,16 +41,21 @@ jobs:
           fi
 
       - uses: grafana/setup-k6-action@v1
+      #   - name: Run local k6 test
+      #     uses: grafana/run-k6-action@v1
+      #     with:
+      #       path: ./repo/k6_test.js
+      #       flags: --summary-export=summary.json
       - name: Run k6 test and save results
         run: |
           cd repo
           k6 run k6_test.js --summary-export=summary.json | tee output.txt
 
       - name: Store load result
-        if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p load-repo
           cp repo/summary.json load-repo/load_summary.json
+          cp repo/output.txt load-repo/output.txt
           echo "${{ github.sha }}" > load-repo/commit_hash.txt
 
           cd load-repo
@@ -59,6 +68,7 @@ jobs:
           fi
 
           git add load_summary.json
+          git add output.txt
           git add commit_hash.txt
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           git diff --staged --quiet || git commit -m "Update load results at $TIMESTAMP"
